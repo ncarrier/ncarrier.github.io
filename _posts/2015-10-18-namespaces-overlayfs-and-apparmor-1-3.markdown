@@ -4,6 +4,7 @@ title:  "Namespaces, AppArmor and overlayfs - Part 1 / 3"
 date:   2015-10-18 17:52:00
 categories: namespaces apparmor overlayfs C linux
 author: Nicolas Carrier
+description: Using linux namespaces in C
 ---
 The purpose of [firmwared], is to make a specially compiled firmware, (for a
  drone, for example) modified as little as possible, run on a desktop PC.
