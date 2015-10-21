@@ -87,11 +87,11 @@ of 1.
 # Partial conclusion and next steps
 
 Now that the firmware can be instantiated in it's own namespace, in it's own
-root, we would like to be able to run multiple instance in parallel, without
+root, we would like to be able to run multiple instances in parallel, without
 having one modifying the file system of the other.
 If possible, it would be great if we could keep the original firmware pristine
 and have the diff between it before and after the run, easily identifiable.
-This problem can be solved with union file system in general and OverlayFS in
+This problem can be solved with union file systems in general and OverlayFS in
 particular, which I will soon detail on the next blog post.
 
 [chroot]: http://linux.die.net/man/2/chroot
