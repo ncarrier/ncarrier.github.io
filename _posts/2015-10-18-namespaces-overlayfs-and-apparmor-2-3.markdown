@@ -76,9 +76,10 @@ Then we can mount the overlayfs:
 sudo mount -t overlay -o lowerdir=ro,upperdir=rw,workdir=workdir overlay union/
 {% endhighlight %}
 
-The last **overlay** argument is normally the name of the device to mount.
-When it is not relevant, you are free to choose it and you can see it as a
-label attached to the mount point.
+The last **overlay** argument to the mount command, is normally the name of the
+device to mount.
+When it is not relevant, which is the case with OverlayFS, you are free to
+choose it and you can see it as a label attached to the mount point.
 It comes in handy when one want to filter the list of mount points, for example.
 
 Now here we go:
