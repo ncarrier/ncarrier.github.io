@@ -4,7 +4,7 @@ title:  "Namespaces, AppArmor and overlayfs - Part 2 / 3"
 date:   2015-10-18 23:21:00
 categories: namespaces apparmor overlayfs C linux
 author: Nicolas Carrier
-description: Playing with AppArmor
+description: Playing with OverlayFS
 ---
 
 Now that the firmware can be instantiated in it's own namespace, in it's own
@@ -197,7 +197,7 @@ file systems for the `lowerdir`, without firmwared even being aware of them.
 
 # Partial conclusion and next step
 
-Now our rootfs has it's file system which will be able to restore to it's
+Now our rootfs has it's file system which we'll be able to restore to it's
 initial state with some umounts and rms.
 It can also be shared between multiple instances.
 What's more it is quite isolated from the rest of the system.
