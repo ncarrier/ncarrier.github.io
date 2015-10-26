@@ -56,7 +56,7 @@ mount(NULL, "/", NULL, MS_REC|MS_PRIVATE, NULL);
 {% endhighlight %}
 
 The `mount namespace` is special, once put in place, the mount hierarchy will
-only be copied to the newnamespace, but will be still visible to the parent
+only be copied to the new namespace, but will be still visible to the parent
 namespace.
 We want to avoid that, because if someone holds a reference on a file, the mount
 point containing it can't be unmounted.
