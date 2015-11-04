@@ -3,6 +3,7 @@ layout: post
 title:  "Namespaces, AppArmor and overlayfs - Part 2 / 3"
 date:   2015-10-18 23:21:00
 categories: namespaces apparmor overlayfs C linux
+longtitle: "One rootfs per firmware instance with OverlayFS"
 author: Nicolas Carrier
 description: Playing with OverlayFS
 ---
