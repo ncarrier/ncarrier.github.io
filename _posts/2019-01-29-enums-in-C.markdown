@@ -1,0 +1,382 @@
+---
+layout: post
+title:  "Enums in C"
+date:   2019-01-29 20:50:00
+categories: C
+longtitle: "Do's and don'ts"
+author: Nicolas Carrier
+---
+
+Working with enums in C is frequently considered as easy, but a lot of code
+dealing with them is at best written poorly or worst, in a dangerous or even
+incorrect way.
+
+In this blog post, I'll try to describe simple albeit good practices, making
+their use more robust and practical.
+
+# Introduction
+
+An enum is meant to represent and gather related values.
+Whenever possible, they should be used in favor of preprocessor macros, because
+they are a way for a developer to document admissible values for function
+parameters or struct fields.
+
+# Enum declaration
+
+An enum can be declared this way:
+
+{% highlight C %}
+enum fruit {
+	FRUIT_APPLE,
+	FRUIT_ORANGE,
+	FRUIT_CRANBERRY
+};
+{% endhighlight %}
+
+This code will declare `FRUIT_APPLE`, `FRUIT_ORANGE` and `FRUIT_CRANBERRY` names
+as having value `0`, `1` and `2` respectively.
+
+**Don't** force their values when it's not necessary, for example, doing this:
+
+{% highlight C %}
+enum fruit {
+	FRUIT_APPLE = 0,
+	FRUIT_ORANGE = 1,
+	FRUIT_CRANBERRY = 2,
+	... bunch of enum entries with consecutive values ...
+	FRUIT_BANANA = 150,
+};
+{% endhighlight %}
+
+Will provide you nothing than headaches when you'll have to maintain it.
+
+Automatic numbering is restarted after each value provided explicitly, for
+example:
+
+{% highlight C %}
+enum my_enum {
+	FIRST_VALUE = 3,
+	SECOND_VALUE,
+	THIRD_VALUE = 10,
+	FOURTH_VALUE
+};
+{% endhighlight %}
+
+In this case, `FIRST_VALUE == 3`, `SECOND_VALUE == 4`, `THIRD_VALUE == 10` and
+`FOURTH_VALUE == 11`.
+
+A given value can be affected to multiple names and a name already declared can
+be used as an other name's value.
+These aspects are frequently used in this pattern:
+
+{% highlight C %}
+enum fruit {
+	FRUIT_FIRST,
+
+	FRUIT_APPLE = FRUIT_FIRST,
+	FRUIT_ORANGE,
+	FRUIT_CRANBERRY,
+
+	FRUIT_COUNT
+};
+{% endhighlight %}
+
+Allowing to iterate simply on the enum values like this:
+
+{% highlight C %}
+enum fruit fruit;
+for (fruit = FRUIT_FIRST; fruit < FRUIT_COUNT; fruit++)
+	// do something with each fruit
+{% endhighlight %}
+
+**CAVEAT** you have to ensure that the `fruit++` operation will result in one
+of the values taken by names declared in the fruit enum, otherwise, the value
+taken by the `fruit` variable may have no meaning.
+No enforcing is done by the C language on the values taken by an enum variable.
+This warning is valid for any arithmetic operation performed on enum values.
+
+Nice to have is an explicit invalid value, a simple way is to add:
+{% highlight C %}
+	...
+	FRUIT_COUNT,
+	FRUIT_INVALID = FRUIT_COUNT
+};
+{% endhighlight %}
+This value may be used for example as a function return value, indicating that
+something went wrong.
+
+# Usage as array indices
+
+It's perfectly valid to use enum values as indices for an array, for example:
+
+{% highlight C %}
+static const unsigned mean_fruit_weight[] {
+	[FRUIT_APPLE] = 200,
+	[FRUIT_ORANGE] = 220,
+	[FRUIT_CRANBERRY] = 12
+};
+{% endhighlight %}
+
+**Always** use designated initializers for an array initializer, to be
+independant of both the actual values and order of an enum's names and the order
+of the initializer's lines.
+
+If your enum has "holes", this initialization is still valid.
+Values of `mean_fruit_weight` corresponding to "holes" will be initialized
+here, to `0` because the array has been declared as `static`.
+But don't forget to be careful when iterating over enum values.
+
+# Enum value validation
+
+The C language doesn't check that a value stored in an enum variable is one of
+those declared in the enum declaration.
+That's why any API defining an enum type should provide a mean to validate that
+an enum value is valid and it **has to** use it internally to validate the API's
+inputs, wherever relevant.
+
+There are two situations:
+
+## For enums with consecutive values
+
+{% highlight C %}
+bool fruit_is_valid(enum fruit fruit)
+{
+	return fruit >= FRUIT_FIRST && fruit < FRUIT_COUNT;
+}
+{% endhighlight %}
+
+and that's all.
+
+**Don't make assumption on the sign of the enum's values**, one compiler may
+represent the enum as a signed integer when another will use an unsigned
+representation.
+
+## For enums with "holes"
+
+{% highlight C %}
+bool fruit_is_valid(enum fruit fruit)
+{
+	switch (fruit) {
+	case FRUIT_APPLE:
+	case FRUIT_ORANGE:
+	case FRUIT_CRANBERRY:
+		return true;
+
+	default:
+		return false;
+	}
+}
+{% endhighlight %}
+
+No need for a return, even `-Wreturn-type` (enabled in `-Wall`) will not
+complain as gcc will understand that no code after the switch can be reached.
+
+On the contrary, this version:
+{% highlight C %}
+bool fruit_is_valid(enum fruit fruit)
+{
+	switch (fruit) {
+	case FRUIT_APPLE:
+	case FRUIT_ORANGE:
+	case FRUIT_CRANBERRY:
+		return true;
+	}
+
+	return false;
+}
+{% endhighlight %}
+
+Would trigger the following warning:
+
+{% highlight bash %}
+warning: enumeration value ‘FRUIT_COUNT’ not handled in switch [-Wswitch]
+{% endhighlight %}
+
+# String conversion
+
+## Converting enum values to string
+
+It's quite simple:
+
+{% highlight C %}
+const char *fruit_to_string(enum fruit fruit)
+{
+	switch (fruit) {
+	case FRUIT_APPLE:
+		return "apple";
+
+	case FRUIT_ORANGE:
+		return "orange";
+
+	case FRUIT_CRANBERRY:
+		return "cranberry";
+
+	default:
+		return "(invalid)";
+	}
+}
+{% endhighlight %}
+
+**Don't** do this:
+{% highlight C %}
+void fruit_to_string(enum fruit fruit, char *output, size_t size)
+...
+{% endhighlight %}
+Or even worse:
+{% highlight C %}
+void fruit_to_string(enum fruit fruit, char *output)
+...
+{% endhighlight %}
+
+First case is not future proof, as the caller will declare somewhere a fixed
+size which may (read: will) not be sufficient at some point in the future.
+The second is a call for buffer overflows.
+
+Don't bother with optimizing this kind of thing too early, like using arrays.
+Start optimizing only when measurements tell you to do so.
+
+It's possible to return NULL on invalid values, but then you'll force the user
+to check the return of and it will prevent your from doing this kind of thing:
+{% highlight C %}
+printf("My favourite fruit is %s\n", fruit_to_string(my_favourite_fruit));
+{% endhighlight %}
+
+## Converting enum values from string
+
+Again, it's simple:
+
+{% highlight C %}
+enum fruit fruit_from_string(const char *fruit_name)
+{
+	enum fruit fruit;
+
+	for (fruit = FRUIT_FIRST; fruit < FRUIT_COUNT; fruit++)
+		if (strcmp(fruit_name, fruit_to_string(fruit)) == 0)
+			return fruit;
+
+	return FRUIT_INVALID;
+}
+{% endhighlight %}
+
+Again, this could be optimized, but only "start optimizing only when
+measurements tell you to do so".
+
+# Printing an enum
+
+As a little bonus, I'll present an absolutely non portable, because
+glibc-specific, albeit cool way to print fruits using functions of the
+printf-family.
+
+This method can be used for custom printing of other types, like structs, IP
+addresses...
+
+We'll register a function as a handler for the `'d'` printf format specifier,
+which is used for printing integers and thus, fruit enums, using
+`register_printf_specifier`.
+This function will take care of converting the fruit to string, by mean of the
+`fruit_to_string` function.
+
+But we don't want that all integers are printed as a fruit.
+To avoid that, we'll also register a printf modifier using
+`register_printf_modifier`, which our specifier handler will detect, in order to
+know if he has to take care of converting the integer argument or not.
+
+Here is the declaration of the two functions we need:
+
+{% highlight C %}
+static int fruit_printf_function(FILE *stream, const struct printf_info *info,
+		const void *const *args)
+{
+	enum fruit fruit;
+
+	if (!(info->user & fruit_modifier))
+		return -2;
+
+	fruit = **((int **)args);
+
+	return fprintf(stream, "%s", fruit_to_string(fruit));
+}
+
+static int fruit_printf_arginfo_size_function(
+		__attribute__((unused)) const struct printf_info *info, size_t n,
+		int *argtypes, int *size)
+{
+	if (n > 0)
+		*argtypes = PA_INT;
+	*size = 1;
+
+	return 1;
+}
+{% endhighlight %}
+
+Now call this code somewhere to register your handler and specifier.
+Personnally, I like to put it in a function marked with
+`__attribute__((constructor))` (gcc specific, supported by clang):
+
+{% highlight C %}
+register_printf_specifier('d', fruit_printf_function,
+		fruit_printf_arginfo_size_function);
+fruit_modifier = register_printf_modifier(L"dfruit");
+{% endhighlight %}
+
+After that, you'll be able to printf / sprintf or whatever, your fruits this
+way:
+
+{% highlight C %}
+enum fruit fruit2 = FRUIT_CRANBERRY;
+printf("fruit2 really is a %dfruitd\n", fruit2);
+{% endhighlight %}
+
+Or, clearer, in my opinion:
+
+{% highlight C %}
+#define FRUIT_PRINT "dfruitd"
+...
+enum fruit fruit2 = FRUIT_CRANBERRY;
+printf("fruit2 really is a %"FRUIT_PRINT"\n", fruit2);
+{% endhighlight %}
+
+Which will give `fruit2 really is a cranberry`.
+
+When using -Wformat (which I highly recommend), gcc will not be aware of your
+custom printf modifier and, if it starts with, say, `'Y'`, it will print a
+warning of this kind:
+
+    warning: unknown conversion type character ‘Y’ in format [-Wformat=]
+
+That's why I recommend making the modifier start with the real format specifier
+which would be used for your custom type.
+As a bonus, incompatible types passed will be properly detected, like here, if
+the compiler decided to use something else than an integer to represent our
+enum.
+
+I also recommend using the same letter for the printf specifier as for the first
+letter of the modifier, for coherence.
+
+It's not clear whether using this kind of method can be considered a good
+practice or not, but it's fun enough to merit being mentionned here ^^.
+
+More information in the [glibc documentation][glibc].
+
+# Last words
+
+When used correctly, enums provide a good way to improve your code's readability
+and robustness, provided they are used in a clean way.
+Most of the time, they should be used instead of macros.
+
+An example implementation of simple fruit library is provided, with an example
+usage program [here][fruit.h], [there][fruit.c] and [there][main.c].
+You can test it doing:
+
+    gcc -Wall -Wextra resources/code/enums/*.c -o main
+    ./main
+
+[glibc]: https://www.gnu.org/software/libc/manual/html_node/Customizing-Printf.html
+[fruit.h]: /resources/code/enums/fruit.h
+[fruit.c]: /resources/code/enums/fruit.c
+[main.c]: /resources/code/enums/main.c
+
+
+
+
+
