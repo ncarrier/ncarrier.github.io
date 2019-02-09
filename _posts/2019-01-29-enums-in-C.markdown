@@ -182,16 +182,16 @@ bool fruit_is_valid(enum fruit fruit)
 	case FRUIT_CRANBERRY:
 		return true;
 
-	default:
-		return false;
+	case FRUIT_INVALID:
+		break;
 	}
+
+	return false;
 }
 {% endhighlight %}
 
-No need for a return, even `-Wreturn-type` (enabled in `-Wall`) will not
-complain as gcc will understand that no code after the switch can be reached.
+The following version is correct and more concise, but less future-proof:
 
-On the contrary, this version:
 {% highlight C %}
 bool fruit_is_valid(enum fruit fruit)
 {
@@ -200,17 +200,23 @@ bool fruit_is_valid(enum fruit fruit)
 	case FRUIT_ORANGE:
 	case FRUIT_CRANBERRY:
 		return true;
-	}
 
-	return false;
+	default:
+		return false;
+	}
 }
 {% endhighlight %}
 
-Would trigger the following warning:
+because when other fruits will be added, the first one will trigger a warning of
+this kind:
 
 {% highlight bash %}
-warning: enumeration value ‘FRUIT_COUNT’ not handled in switch [-Wswitch]
+warning: enumeration value ‘FRUIT_BANANA’ not handled in switch [-Wswitch]
 {% endhighlight %}
+
+which will force the developer to add a new switch case.
+On the contrary, the version with the default clause will silently handle the
+new fruit and say it's invalid, which is obviously wrong here.
 
 # String conversion
 
@@ -231,9 +237,11 @@ const char *fruit_to_string(enum fruit fruit)
 	case FRUIT_CRANBERRY:
 		return "cranberry";
 
-	default:
-		return "(invalid)";
+	case FRUIT_INVALID:
+		break;
 	}
+
+	return "(invalid)";
 }
 {% endhighlight %}
 

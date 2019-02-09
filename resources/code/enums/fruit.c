@@ -49,9 +49,11 @@ const char *fruit_to_string(enum fruit fruit)
 	case FRUIT_CRANBERRY:
 		return "cranberry";
 
-	default:
-		return "(invalid)";
+	case FRUIT_INVALID:
+		break;
 	}
+
+	return "(invalid)";
 }
 
 enum fruit fruit_from_string(const char *fruit_name)
