@@ -50,6 +50,26 @@ enum fruit {
 
 Will provide you nothing than headaches when you'll have to maintain it.
 
+Another common pattern is:
+
+{% highlight C %}
+typedef enum {
+	FRUIT_APPLE,
+	...
+} fruit;
+{% endhighlight %}
+
+It should be avoided because it:
+ * declares an anonymous enum which is typedef-ed  
+   Having it named instead, is more explicit in tools' output, like compilers or
+   IDEs
+ * will prevent developers from using `enum fruit`, which is clearer than just
+   `fruit`
+
+What's more, it is rejected by the Linux kernel coding style that I personnally
+like to use for my code.  
+The same advice is also valid for `struct`s and `union`s.
+
 Automatic numbering is restarted after each value provided explicitly, for
 example:
 
