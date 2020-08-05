@@ -1,0 +1,29 @@
+containers:
+   tsearch
+       manage a binary tree
+   algorithms
+       bsearch: binary search in an array
+       lsearch: linear search in an array
+       qsort
+   doubly-linked lists
+       insque remque
+   hsearch
+       hash table management
+
+why APIs shouldn't break
+why -Werror should be used, but not commited
+On function to rule them all: snprintf
+
+
+
+
+ - containers
+Split this article into multiple ones.
+
+First will be how to implement containers in C, with the actual content and
+a summary of how the different approaches compare.
+Second will be a detailed article on the slist API.
+Third will be a scan through all the available sets APIs in sys/queue.
+
+# Last words
+
