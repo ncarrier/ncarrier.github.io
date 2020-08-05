@@ -1,6 +1,6 @@
 # Site settings
 title: Nicolas Carrier's personal page
-#email: carrier.nicolas0@gmail.com
+email: carrier.nicolas0@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
   Posts on programming and free software-related topics.
 baseurl: "" # the subpath of your site, e.g. /blog/
