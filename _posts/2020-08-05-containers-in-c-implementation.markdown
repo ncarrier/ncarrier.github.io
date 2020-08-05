@@ -338,10 +338,11 @@ list API is reuse and testability which disqualifies the first approach.
 To conclude this article, when I'm forced to reimplement a linked list API, I
 personnally use the `container_of` approach and otherwise, I use what the C
 library already offers and which we'll see in more details in the next articles
-of this series.
+of this series, starting with [a detailed usage example of slists][part_2].
 
 [container_of]: https://elixir.free-electrons.com/linux/v3.2/source/include/linux/kernel.h#L659
 [approach_1]: /resources/code/containers-in-c/approach_1.c
 [approach_2]: /resources/code/containers-in-c/approach_2.c
 [approach_3]: /resources/code/containers-in-c/approach_3.c
 [approach_4]: /resources/code/containers-in-c/approach_4.c
+[part_2]: /c/glibc/2020/09/05/containers-in-c-slist.html
